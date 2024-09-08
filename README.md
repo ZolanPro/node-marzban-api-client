@@ -19,7 +19,7 @@ console.log(user);
 ```
 
 ## Documentation
-- [API Documentation](https://github.com/ZolanPro/node-marzban-api-client/docs/api.md "API Documentation")
+- [API Documentation](https://github.com/ZolanPro/node-marzban-api-client/blob/master/docs/api.md "API Documentation")
 
 ## License
 Distributed under the MIT License. See `LICENSE` for more information.

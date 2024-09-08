@@ -6,7 +6,7 @@ Marzban
 **Kind**: global class  
 
 * [Marzban](#Marzban)
-    * [new Marzban(url)](#new_Marzban_new)
+    * [new Marzban(url, options)](#new_Marzban_new)
     * [.admin](#Marzban+admin) : [<code>Admin</code>](#Admin)
         * [.token(username, password, parameters)](#Marzban+admin+token) ⇒ <code>Promise.&lt;\*&gt;</code>
         * [.get()](#Marzban+admin+get) ⇒ <code>Promise.&lt;\*&gt;</code>
@@ -60,11 +60,12 @@ Marzban
 
 <a name="new_Marzban_new"></a>
 
-### new Marzban(url)
+### new Marzban(url, options)
 
 | Param | Type | Description |
 | --- | --- | --- |
 | url | <code>String</code> | Marzban API URL |
+| options | <code>Object</code> | Options |
 
 <a name="Marzban+admin"></a>
 

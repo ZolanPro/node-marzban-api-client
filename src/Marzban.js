@@ -11,14 +11,20 @@ import {UserTemplate} from "./API/UserTemplate.js";
  * Marzban API Wrapper
  * @class Marzban
  * @param {String} url - Marzban API URL
+ * @param {{errorHandler: function, reAuth: boolean, reAuthAttemps: number}} - Options
  * @constructor
  */
 class Marzban {
-  constructor(url) {
+  constructor(url, options = {}) {
     this.axios = axios.create({
       baseURL: url,
       headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
-    });
+    })
+    this._reAuthAttemptsCounter = 0;
+
+    this.errorHandler = options.errorHandler || null;
+    this.reAuth = options.reAuth || false;
+    this.reAuthAttempts = options.reAuthAttempts || 3;
 
     this.axios.interceptors.response.use(response => response.data, error => this._errorHandler(error));
 
@@ -66,10 +72,21 @@ class Marzban {
    * @returns {Promise<boolean>}
    */
   async auth(username, password) {
+    if (!username || !password) {
+      throw new Error('Username and password are required');
+    }
+
     const { access_token } = await this.admin.token(username, password);
 
     if (access_token) {
       this.axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+
+      if (this.reAuth) {
+        this._reAuthAttemptsCounter = 0;
+        this._authUsername = username;
+        this._authPassword = password;
+      }
+
       return true;
     }
 
@@ -79,13 +96,39 @@ class Marzban {
   /**
    * Error handler
    * @param {object} error
-   * @returns {boolean}
+   * @returns {boolean|Promise<*>}
    * @private
    */
   _errorHandler(error) {
-    console.error(error.response.status, error.response.data);
+    if (this.errorHandler) {
+      this.errorHandler(error);
+    } else {
+      console.error(error.response.status, error.response.data);
+    }
+
+    if (this.reAuth && error.response.status === 401) {
+      return this._reAuth(error);
+    }
 
     return false;
+  }
+
+  /**
+   * Re-authenticate
+   * @param {object} error
+   * @returns {Promise<*>}
+   * @private
+   */
+  async _reAuth(error) {
+    if (this.reAuth && this._reAuthAttemptsCounter < this.reAuthAttempts) {
+      const authenticated = await this.auth(this._authUsername, this._authPassword);
+
+      this._reAuthAttemptsCounter++;
+
+      if (authenticated) {
+        return this.axios.request(error.config);
+      }
+    }
   }
 }
 

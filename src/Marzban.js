@@ -13,7 +13,7 @@ import {UserTemplate} from "./API/UserTemplate.js";
  * @param {String} url - Marzban API URL
  * @constructor
  */
-export default class Marzban {
+class Marzban {
   constructor(url) {
     this.axios = axios.create({
       baseURL: url,
@@ -88,3 +88,5 @@ export default class Marzban {
     return false;
   }
 }
+
+export default Marzban;

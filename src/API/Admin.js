@@ -1,4 +1,4 @@
-import {objectToQueryString} from "../../utils.js";
+import {objectToQueryString} from "../utils.js";
 
 /**
  * Admin API Wrapper

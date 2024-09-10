@@ -26,7 +26,10 @@ class Marzban {
     this.reAuth = options.reAuth || false;
     this.reAuthAttempts = options.reAuthAttempts || 3;
 
-    this.axios.interceptors.response.use(response => response.data, error => this._errorHandler(error));
+    this.axios.interceptors.response.use(
+      response => response.data,
+      error => this._errorHandler(error)
+    );
 
     /**
      * @alias Admin
@@ -99,36 +102,33 @@ class Marzban {
    * @returns {boolean|Promise<*>}
    * @private
    */
-  _errorHandler(error) {
+  async _errorHandler(error) {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && this.reAuth && this._reAuthAttemptsCounter < this.reAuthAttempts) {
+      this._reAuthAttemptsCounter++;
+      console.log(`Token expired, attempting re-authentication (${this._reAuthAttemptsCounter}/${this.reAuthAttempts})`);
+
+      try {
+        const isAuthenticated = await this.auth(this._authUsername, this._authPassword);
+
+        if (isAuthenticated) {
+          originalRequest.headers['Authorization'] = this.axios.defaults.headers.common['Authorization'];
+          return this.axios.request(originalRequest);
+        }
+      } catch (authError) {
+        console.error('Re-authentication failed', authError);
+        throw authError;
+      }
+    }
+
     if (this.errorHandler) {
       this.errorHandler(error);
     } else {
-      console.error(error.response.status, error.response.data);
+      console.error(error.response?.status, error.response?.data);
     }
 
-    if (this.reAuth && error.response.status === 401) {
-      return this._reAuth(error);
-    }
-
-    return false;
-  }
-
-  /**
-   * Re-authenticate
-   * @param {object} error
-   * @returns {Promise<*>}
-   * @private
-   */
-  async _reAuth(error) {
-    if (this.reAuth && this._reAuthAttemptsCounter < this.reAuthAttempts) {
-      const authenticated = await this.auth(this._authUsername, this._authPassword);
-
-      this._reAuthAttemptsCounter++;
-
-      if (authenticated) {
-        return this.axios.request(error.config);
-      }
-    }
+    throw error;
   }
 }
 

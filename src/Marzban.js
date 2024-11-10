@@ -7,6 +7,12 @@ import {System} from "./API/System.js";
 import {User} from "./API/User.js";
 import {UserTemplate} from "./API/UserTemplate.js";
 
+const OPTIONS = {
+  errorHandler: null,
+  reAuth: false,
+  reAuthAttempts: 3
+}
+
 /**
  * Marzban API Wrapper
  * @class Marzban
@@ -15,7 +21,7 @@ import {UserTemplate} from "./API/UserTemplate.js";
  * @constructor
  */
 class Marzban {
-  constructor(url, options = {}) {
+  constructor(url, options = OPTIONS) {
     this.axios = axios.create({
       baseURL: url,
       headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
@@ -97,6 +103,24 @@ class Marzban {
   }
 
   /**
+   * Re-authenticate and update token
+   * @returns {Promise<boolean>}
+   * @private
+   */
+  async _reAuthenticate() {
+    if (this._authUsername && this._authPassword) {
+      try {
+        return await this.auth(this._authUsername, this._authPassword);
+      } catch (authError) {
+        console.error('Re-authentication failed', authError);
+        throw authError;
+      }
+    } else {
+      throw new Error('No stored credentials for re-authentication');
+    }
+  }
+
+  /**
    * Error handler
    * @param {object} error
    * @returns {boolean|Promise<*>}
@@ -110,7 +134,7 @@ class Marzban {
       console.log(`Token expired, attempting re-authentication (${this._reAuthAttemptsCounter}/${this.reAuthAttempts})`);
 
       try {
-        const isAuthenticated = await this.auth(this._authUsername, this._authPassword);
+        const isAuthenticated = await this._reAuthenticate();
 
         if (isAuthenticated) {
           originalRequest.headers['Authorization'] = this.axios.defaults.headers.common['Authorization'];

@@ -19,7 +19,12 @@ console.log(user);
 ```
 
 ## Documentation
-- [API Documentation](https://github.com/ZolanPro/node-marzban-api-client/blob/master/docs/api.md "API Documentation")
+- [API Description](https://github.com/ZolanPro/node-marzban-api-client/blob/master/docs/api.md "API Description")
+
+### Options
+- `errorHandler` - Function to handle errors
+- `reAuth` - Boolean to enable auto re-authentication
+- `reAuthAttempts` - Number of re-authentication attempts
 
 ## License
 Distributed under the MIT License. See `LICENSE` for more information.
